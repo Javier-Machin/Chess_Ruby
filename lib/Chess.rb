@@ -7,59 +7,72 @@ class Chess
     @board = {}
     @current_player = @player1
     @current_selection = nil
+    @possible_moves = []
+    @x = 1
+    @y = 1
+  end
+
+  def convert_input(input)
+  	x = input[0].ord - 96
+  	y = input[1]
+  	return "#{x}#{y}"
   end
 
   def start_game
     #create_board
-    #print_board
+    print_board
     
-    #loop do
+    loop do
       puts "It's #{@current_player}'s turn"
       puts "Select a piece"
-      #input = gets.chomp
-      #select_piece(input)
+      input = gets.chomp
+      input = convert_input(input)
+      select_piece(input)
+      puts "Nice #{piece} you got there OwO"
       puts "Select destination"
-      #input = gets.chomp
-      #move_to(input)
+      input = gets.chomp
+      input = convert_input(input)
+      move_to(input)
       #king_alive?
       #is_check?
       #is_checkmate?
-      #print_board
-      #next_turn
-    #end
+      print_board
+      next_turn
+    end
 
   end
 
+  #Populates the board with pieces and empty slots
   def create_board
-  	@board["a8"] = Rook.new("Blacks")
-    @board["b8"] = Knight.new("Blacks")
-    @board["c8"] = Bishop.new("Blacks")
-    @board["d8"] = Queen.new("Blacks")
-    @board["e8"] = King.new("Blacks")
-    @board["f8"] = Bishop.new("Blacks")
-    @board["g8"] = Knight.new("Blacks")
-    @board["h8"] = Rook.new("Blacks") 
-  	8.times { |index| @board["#{(index + 97).chr}7"] = BlackPawn.new("Blacks") }
-    8.times { |index| @board["#{(index + 97).chr}6"] = nil }
-    8.times { |index| @board["#{(index + 97).chr}5"] = nil }
-    8.times { |index| @board["#{(index + 97).chr}4"] = nil }
-    8.times { |index| @board["#{(index + 97).chr}3"] = nil }
-    8.times { |index| @board["#{(index + 97).chr}2"] = WhitePawn.new("Whites") }
-    @board["a1"] = Rook.new("Whites") 
-    @board["b1"] = Knight.new("Whites")
-    @board["c1"] = Bishop.new("Whites")
-    @board["d1"] = Queen.new("Whites")
-    @board["e1"] = King.new("Whites")
-    @board["f1"] = Bishop.new("Whites")
-    @board["g1"] = Knight.new("Whites")
-    @board["h1"] = Rook.new("Whites")
+    @board["18"] = Rook.new("Blacks")
+    @board["28"] = Knight.new("Blacks")
+    @board["38"] = Bishop.new("Blacks")
+    @board["48"] = Queen.new("Blacks")
+    @board["58"] = King.new("Blacks")
+    @board["68"] = Bishop.new("Blacks")
+    @board["78"] = Knight.new("Blacks")
+    @board["88"] = Rook.new("Blacks") 
+    8.times { |index| @board["#{index + 1}7"] = BlackPawn.new("Blacks") }
+    8.times { |index| @board["#{index + 1}6"] = nil }
+    8.times { |index| @board["#{index + 1}5"] = nil }
+    8.times { |index| @board["#{index + 1}4"] = nil }
+    8.times { |index| @board["#{index + 1}3"] = nil }
+    8.times { |index| @board["#{index + 1}2"] = WhitePawn.new("Whites") }
+    @board["11"] = Rook.new("Whites") 
+    @board["21"] = Knight.new("Whites")
+    @board["31"] = Bishop.new("Whites")
+    @board["41"] = Queen.new("Whites")
+    @board["51"] = King.new("Whites")
+    @board["61"] = Bishop.new("Whites")
+    @board["71"] = Knight.new("Whites")
+    @board["81"] = Rook.new("Whites")
   end
 
   def print_board
     @board.each do |key, value|
-      if key[0] == "h"
+      if key[0] == "8"
         value == nil ? (puts "[  ]") : (puts "[#{value.symbol} ]")
-      elsif key[0] == "a"
+      elsif key[0] == "1"
         value == nil ? (print "#{key[1]} [  ]") : (print "#{key[1]} [#{value.symbol} ]")
       else
         value == nil ? (print "[  ]") : (print "[#{value.symbol} ]") 
@@ -74,13 +87,84 @@ class Chess
     #what is done here and what is done in select_piece?
   end
 
-  def select_piece
+  def next_turn
+    @current_player == "Whites" ? @current_player = "Blacks" : @current_player = "Whites"
+  end
+
+  def select_piece(input)
     #everytime a piece is selected a list of possible destinations for that piece is created
     #method that creates the list is named the same in every piece class so call reusable
+    loop do
+      if @board[input] == nil
+        puts "That slot is empty" 
+      elsif @board[input].team == @current_player
+        piece = @board[input].class.to_s.split("::")[-1]
+        puts "#{piece} selected"
+        @current_selection = input
+        calculate_moves(piece, input)
+        break
+      else
+        puts "Invalid selection, wrong team"
+      end
+      puts "select a piece"
+      input = gets.chomp[0, 2]
+      input = convert_input(input)
+    end
+  end
+
+  #Using the class and the current location, calculate the possible movements
+  def calculate_moves(piece, location)
+  	@x = location[0].to_i
+  	@y = location[1].to_i
+
+    case piece
+    when "WhitePawn"
+      @possible_moves = []
+      @possible_moves << "#{@x}#{@y + 1}" unless path_blocked?("#{@x}#{@y + 1}")
+      @possible_moves << "#{@x}#{@y + 2}" unless @y != 2 || path_blocked?("#{@x}#{@y + 2}")
+    when "BlackPawn"
+      @possible_moves = []
+      @possible_moves << "#{@x}#{@y - 1}" unless path_blocked?("#{@x}#{@y - 1}")
+      @possible_moves << "#{@x}#{@y - 2}" unless @y != 7 || path_blocked?("#{@x}#{@y - 2}")
+    when "Rook"
+      
+    when "Knight"
+
+    when "Bishop"
+
+    when "Queen"
+
+    when "King"
+    
+    else
+
+    end
+  end
+
+  def path_blocked?(target)
+    return true if @board[target] != nil
+    false
+  end
+
+  def friendly_piece?(target)
+    if @board[target] != nil
+      return true if @board[target].team == @current_player
+    end
   end
 
   def move_to(destination)
     #gucci if destination included in the list of possible destinations
+    loop do 
+      if @possible_moves.include?(destination)
+        @board[destination] = @board[@current_selection]
+        @board[@current_selection] = nil
+        break
+      else
+        puts "Invalid move, enter a different target location"
+      end
+      destination = gets.chomp[0, 2]
+      destination = convert_input(destination)
+    end
   end
 
   def save_state
@@ -99,22 +183,22 @@ class Chess
   class Piece
     attr_accessor :team, :symbol 
     def initialize(team)
-  	  @team = team
-  	end
+      @team = team
+    end
   end
 
   class WhitePawn < Piece
-  	def initialize(team)
-  	  super	
-  	  @symbol = "\u265F".encode("utf-8")  
-  	end
+    def initialize(team)
+      super	
+      @symbol = "\u265F".encode("utf-8")  
+    end
   end
 
   class BlackPawn < WhitePawn
-  	def initialize(team)
-  	  super
-  	  @symbol = "\u2659".encode("utf-8")
-  	end
+    def initialize(team)
+      super
+      @symbol = "\u2659".encode("utf-8")
+    end
   end
 
   class Rook < Piece
@@ -159,8 +243,6 @@ class Chess
 
 end
 
-muh_chess = Chess.new
-muh_chess.create_board
-muh_chess.print_board
-puts muh_chess.board["a1"]
-puts muh_chess.board["a1"].team
+#muh_chess = Chess.new
+#muh_chess.create_board
+#muh_chess.start_game
