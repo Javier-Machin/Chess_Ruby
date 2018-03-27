@@ -14,13 +14,13 @@ class Chess
   end
 
   def convert_input(input)
-  	x = input[0].ord - 96
-  	y = input[1]
-  	return "#{x}#{y}"
+    x = input[0].ord - 96
+    y = input[1]
+    return "#{x}#{y}"
   end
 
   def start_game
-    #create_board
+    create_board
     print_board
     
     loop do
@@ -82,18 +82,16 @@ class Chess
   end
 
   def check_input(input, type)
-  	#type piece
-  	#type destination
-    #what is done here and what is done in select_piece?
+
   end
 
   def next_turn
-  	if @current_player == "Whites"
-  	  @current_player = "Blacks"
-  	  @current_opponent = "Whites"
-  	else
-  	  @current_player = "Whites"
-  	  @current_opponent = "Blacks"
+    if @current_player == "Whites"
+      @current_player = "Blacks"
+      @current_opponent = "Whites"
+    else
+      @current_player = "Whites"
+      @current_opponent = "Blacks"
     end
   end
 
@@ -120,8 +118,8 @@ class Chess
 
   #Using the class and the current location, calculate the possible movements
   def calculate_moves(piece, location)
-  	@x = location[0].to_i
-  	@y = location[1].to_i
+    @x = location[0].to_i
+    @y = location[1].to_i
     @possible_moves = []
 
     case piece
@@ -131,12 +129,16 @@ class Chess
       @possible_moves << "#{@x}#{@y + 1}" unless path_blocked?("#{@x}#{@y + 1}") 
       
       # Attack forward right
-      if @board["#{@x + 1}#{@y + 1}"] != nil && @board["#{@x + 1}#{@y + 1}"].team == @current_opponent 
+      if @board["#{@x + 1}#{@y + 1}"] != nil && 
+      	 @board["#{@x + 1}#{@y + 1}"].team == @current_opponent 
+        
         @possible_moves << "#{@x + 1}#{@y + 1}" 
       end
       
       # Attack forward left
-      if @board["#{@x - 1}#{@y + 1}"] != nil && @board["#{@x - 1}#{@y + 1}"].team == @current_opponent 
+      if @board["#{@x - 1}#{@y + 1}"] != nil && 
+         @board["#{@x - 1}#{@y + 1}"].team == @current_opponent 
+        
         @possible_moves << "#{@x - 1}#{@y + 1}" 
       end
       
@@ -147,11 +149,15 @@ class Chess
       # Same moves of the WhitePawn but reversed
       @possible_moves << "#{@x}#{@y - 1}" unless path_blocked?("#{@x}#{@y - 1}")
 
-      if @board["#{@x + 1}#{@y - 1}"] != nil && @board["#{@x + 1}#{@y - 1}"].team == @current_opponent
+      if @board["#{@x + 1}#{@y - 1}"] != nil && 
+      	 @board["#{@x + 1}#{@y - 1}"].team == @current_opponent
+        
         @possible_moves << "#{@x + 1}#{@y - 1}" 
       end
 
-      if @board["#{@x - 1}#{@y - 1}"] && @board["#{@x - 1}#{@y - 1}"].team == @current_opponent
+      if @board["#{@x - 1}#{@y - 1}"] != nil && 
+      	 @board["#{@x - 1}#{@y - 1}"].team == @current_opponent
+        
         @possible_moves << "#{@x - 1}#{@y - 1}" 
       end
 
@@ -160,7 +166,15 @@ class Chess
     when "Rook"
       
     when "Knight"
-
+      knight_movement = [[@x + 1, @y + 2], [@x + 2, @y + 1], 
+                         [@x + 2, @y - 1], [@x + 1, @y - 2], 
+                         [@x - 1, @y - 2], [@x - 2, @y - 1], 
+                         [@x - 2, @y + 1], [@x - 1, @y + 2]]
+      
+      knight_movement.each do |move| 
+        @possible_moves << "#{move[0]}#{move[1]}" unless out_of_bounds?("#{move[0]}#{move[1]}") ||
+                                                        friendly_piece?("#{move[0]}#{move[1]}")
+      end        
     when "Bishop"
 
     when "Queen"
@@ -172,16 +186,24 @@ class Chess
     end
   end
 
-  def path_blocked?(target)
-  	#checks every slot in the path from the original location to the target
-  	#returns true if it finds anything but empty slots in the path
-  	
-  	x_steps = target[0].to_i - @x
-  	y_steps = target[1].to_i - @y
+  def out_of_bounds?(target)
+    x = target[0]
+    y = target[1]
+    return true unless x.to_i.between?(1, 8)
+    return true unless y.to_i.between?(1, 8)
+    false
+  end
 
-  	y_steps.abs.times do |index|
+  def path_blocked?(target)
+    #checks every slot in the path from the original location to the target
+    #returns true if it finds anything but empty slots in the path
+
+    x_steps = target[0].to_i - @x
+    y_steps = target[1].to_i - @y
+
+    y_steps.abs.times do |index| #maybe will need (y_steps.abs - 1) to check the path up to the target but not included
       if y_steps > 0
-  	    current_target = @y + (index + 1)
+        current_target = @y + (index + 1)
         return true if @board["#{target[0]}#{current_target}"] != nil
       else
         current_target = @y - (index + 1)
@@ -289,6 +311,5 @@ class Chess
 
 end
 
-muh_chess = Chess.new
-muh_chess.create_board
-muh_chess.start_game
+#muh_chess = Chess.new
+#muh_chess.start_game

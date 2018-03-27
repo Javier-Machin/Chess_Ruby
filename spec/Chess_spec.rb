@@ -36,6 +36,14 @@ describe Chess do
         my_game.move_to("15")
         expect(my_game.board["15"].class).to eql(Chess::BlackPawn) 
       end
+
+      it "allow Knights to jump over other pieces" do
+        my_game.create_board
+        my_game.select_piece("21")
+        my_game.move_to("33")
+        expect(my_game.board["33"].class).to eql(Chess::Knight)
+      end
+      
     end
   end
 end
