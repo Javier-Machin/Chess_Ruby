@@ -23,7 +23,18 @@ describe Chess do
       end
 
       it "removes the selected piece from the original location" do
-         expect(my_game.board["12"]).to eql(nil)
+        my_game.create_board 
+        my_game.select_piece("12")
+        my_game.move_to("14")  
+        expect(my_game.board["12"]).to eql(nil)
+      end
+
+      it "works with black pieces too" do
+        my_game.create_board
+        my_game.next_turn
+        my_game.select_piece("17")
+        my_game.move_to("15")
+        expect(my_game.board["15"].class).to eql(Chess::BlackPawn) 
       end
     end
   end

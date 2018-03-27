@@ -6,6 +6,7 @@ class Chess
     @player2 = "Blacks"
     @board = {}
     @current_player = @player1
+    @current_opponent = @player2
     @current_selection = nil
     @possible_moves = []
     @x = 1
@@ -28,7 +29,6 @@ class Chess
       input = gets.chomp
       input = convert_input(input)
       select_piece(input)
-      puts "Nice #{piece} you got there OwO"
       puts "Select destination"
       input = gets.chomp
       input = convert_input(input)
@@ -88,7 +88,13 @@ class Chess
   end
 
   def next_turn
-    @current_player == "Whites" ? @current_player = "Blacks" : @current_player = "Whites"
+  	if @current_player == "Whites"
+  	  @current_player = "Blacks"
+  	  @current_opponent = "Whites"
+  	else
+  	  @current_player = "Whites"
+  	  @current_opponent = "Blacks"
+    end
   end
 
   def select_piece(input)
@@ -116,16 +122,41 @@ class Chess
   def calculate_moves(piece, location)
   	@x = location[0].to_i
   	@y = location[1].to_i
+    @possible_moves = []
 
     case piece
+
     when "WhitePawn"
-      @possible_moves = []
-      @possible_moves << "#{@x}#{@y + 1}" unless path_blocked?("#{@x}#{@y + 1}")
+      # 1 step forward
+      @possible_moves << "#{@x}#{@y + 1}" unless path_blocked?("#{@x}#{@y + 1}") 
+      
+      # Attack forward right
+      if @board["#{@x + 1}#{@y + 1}"] != nil && @board["#{@x + 1}#{@y + 1}"].team == @current_opponent 
+        @possible_moves << "#{@x + 1}#{@y + 1}" 
+      end
+      
+      # Attack forward left
+      if @board["#{@x - 1}#{@y + 1}"] != nil && @board["#{@x - 1}#{@y + 1}"].team == @current_opponent 
+        @possible_moves << "#{@x - 1}#{@y + 1}" 
+      end
+      
+      # 2 steps forward if its in the starting point
       @possible_moves << "#{@x}#{@y + 2}" unless @y != 2 || path_blocked?("#{@x}#{@y + 2}")
+
     when "BlackPawn"
-      @possible_moves = []
+      # Same moves of the WhitePawn but reversed
       @possible_moves << "#{@x}#{@y - 1}" unless path_blocked?("#{@x}#{@y - 1}")
+
+      if @board["#{@x + 1}#{@y - 1}"] != nil && @board["#{@x + 1}#{@y - 1}"].team == @current_opponent
+        @possible_moves << "#{@x + 1}#{@y - 1}" 
+      end
+
+      if @board["#{@x - 1}#{@y - 1}"] && @board["#{@x - 1}#{@y - 1}"].team == @current_opponent
+        @possible_moves << "#{@x - 1}#{@y - 1}" 
+      end
+
       @possible_moves << "#{@x}#{@y - 2}" unless @y != 7 || path_blocked?("#{@x}#{@y - 2}")
+
     when "Rook"
       
     when "Knight"
@@ -142,7 +173,21 @@ class Chess
   end
 
   def path_blocked?(target)
-    return true if @board[target] != nil
+  	#checks every slot in the path from the original location to the target
+  	#returns true if it finds anything but empty slots in the path
+  	
+  	x_steps = target[0].to_i - @x
+  	y_steps = target[1].to_i - @y
+
+  	y_steps.abs.times do |index|
+      if y_steps > 0
+  	    current_target = @y + (index + 1)
+        return true if @board["#{target[0]}#{current_target}"] != nil
+      else
+        current_target = @y - (index + 1)
+        return true if @board["#{target[0]}#{current_target}"] != nil
+      end
+    end
     false
   end
 
@@ -154,6 +199,7 @@ class Chess
 
   def move_to(destination)
     #gucci if destination included in the list of possible destinations
+    #or change selection if destination friendly piece
     loop do 
       if @possible_moves.include?(destination)
         @board[destination] = @board[@current_selection]
@@ -243,6 +289,6 @@ class Chess
 
 end
 
-#muh_chess = Chess.new
-#muh_chess.create_board
-#muh_chess.start_game
+muh_chess = Chess.new
+muh_chess.create_board
+muh_chess.start_game
