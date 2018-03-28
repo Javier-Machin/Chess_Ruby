@@ -219,33 +219,13 @@ class Chess
   end
 
   def path_blocked?(target)
-    #checks every slot in the path from the original location to the target
-    #returns true if it finds anything but empty slots in the path
-
+    # Checks every slot in the path from the original location to the target
+    # Returns true if it finds anything but empty slots in the path
     x_steps = target[0].to_i - @x
     y_steps = target[1].to_i - @y
-    if @board[@current_selection].class.to_s.include?("Pawn") || @board[@current_selection].class.to_s.include?("Rook")
-      (y_steps.abs - 1).times do |index| #maybe will need (y_steps.abs - 1) to check the path up to the target but not included
-        if y_steps > 0
-          current_target = @y + (index + 1)
-          return true if @board["#{target[0]}#{current_target}"] != nil
-        elsif y_steps < 0
-          current_target = @y - (index + 1)
-          return true if @board["#{target[0]}#{current_target}"] != nil
-        end
-      end
-      (x_steps.abs - 1).times do |index| #maybe will need (y_steps.abs - 1) to check the path up to the target but not included
-        if x_steps > 0
-          current_target = @x + (index + 1)
-          return true if @board["#{current_target}#{target[1]}"] != nil
-        elsif x_steps < 0
-          current_target = @x - (index + 1)
-          return true if @board["#{current_target}#{target[1]}"] != nil
-        end
-      end
-    else
-      #bishop rules
-      (y_steps.abs - 1).times do |index| #maybe will need (y_steps.abs - 1) to check the path up to the target but not included
+    # Diagonal movements
+    if x_steps != 0 && y_steps != 0
+      (y_steps.abs - 1).times do |index| 
         if y_steps > 0 && x_steps > 0
           current_target = "#{@x + (index + 1)}#{@y + (index + 1)}"
           return true if @board[current_target] != nil
@@ -258,6 +238,26 @@ class Chess
         elsif y_steps < 0 && x_steps < 0
           current_target = "#{@x - (index + 1)}#{@y - (index + 1)}"
           return true if @board["#{target[0]}#{current_target}"] != nil
+        end
+      end
+    # Straight line movements
+    else
+      (y_steps.abs - 1).times do |index| 
+        if y_steps > 0
+          current_target = @y + (index + 1)
+          return true if @board["#{target[0]}#{current_target}"] != nil
+        elsif y_steps < 0
+          current_target = @y - (index + 1)
+          return true if @board["#{target[0]}#{current_target}"] != nil
+        end
+      end
+      (x_steps.abs - 1).times do |index| 
+        if x_steps > 0
+          current_target = @x + (index + 1)
+          return true if @board["#{current_target}#{target[1]}"] != nil
+        elsif x_steps < 0
+          current_target = @x - (index + 1)
+          return true if @board["#{current_target}#{target[1]}"] != nil
         end
       end
     end
