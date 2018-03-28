@@ -124,6 +124,37 @@ class Chess
     @y = location[1].to_i
     @possible_moves = []
 
+    def add_straight_line_moves(index)
+      move = "#{@x + (index + 1)}#{@y}" # Right
+      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
+                                                            friendly_piece?(move)
+      move = "#{@x}#{@y + (index + 1)}" # Up
+      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
+                                                            friendly_piece?(move)
+      move = "#{@x - (index + 1)}#{@y}" # Left
+      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
+                                                            friendly_piece?(move)
+      move = "#{@x}#{@y - (index + 1)}" # Down
+      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
+                                                            friendly_piece?(move)
+
+    end
+
+    def add_diagonal_moves(index)
+      move = "#{@x + (index + 1)}#{@y + (index + 1)}" # Up right
+      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
+                                                            friendly_piece?(move)
+      move = "#{@x - (index + 1)}#{@y - (index + 1)}" # Down left
+      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
+                                                            friendly_piece?(move)
+      move = "#{@x + (index + 1)}#{@y - (index + 1)}" # Down right
+      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
+                                                            friendly_piece?(move)
+      move = "#{@x - (index + 1)}#{@y + (index + 1)}" # Up left
+      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
+                                                              friendly_piece?(move)
+    end
+
     case piece
 
     when "WhitePawn"
@@ -167,20 +198,7 @@ class Chess
       @possible_moves << move unless @y != 7 || path_blocked?(move) || @board[move]
 
     when "Rook"
-      7.times do |index|
-      	move = "#{@x + (index + 1)}#{@y}" # Right
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
-        move = "#{@x}#{@y + (index + 1)}" # Up
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
-        move = "#{@x - (index + 1)}#{@y}" # Left
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
-        move = "#{@x}#{@y - (index + 1)}" # Down
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
-      end
+      7.times { |index| add_straight_line_moves(index) }
 
     when "Knight"
       knight_moves = [[@x + 1, @y + 2], [@x + 2, @y + 1], 
@@ -194,73 +212,17 @@ class Chess
       end
 
     when "Bishop"
-      7.times do |index|
-      	move = "#{@x + (index + 1)}#{@y + (index + 1)}" # Up right
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
-        move = "#{@x - (index + 1)}#{@y - (index + 1)}" # Down left
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
-        move = "#{@x + (index + 1)}#{@y - (index + 1)}" # Down right
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
-        move = "#{@x - (index + 1)}#{@y + (index + 1)}" # Up left
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
-      end
-
+      7.times { |index| add_diagonal_moves(index) }
+    
     when "Queen"
       7.times do |index|
-      	move = "#{@x + (index + 1)}#{@y}" # Right
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
-        move = "#{@x}#{@y + (index + 1)}" # Up
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
-        move = "#{@x - (index + 1)}#{@y}" # Left
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
-        move = "#{@x}#{@y - (index + 1)}" # Down
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
-      	move = "#{@x + (index + 1)}#{@y + (index + 1)}" # Up right
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
-        move = "#{@x - (index + 1)}#{@y - (index + 1)}" # Down left
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
-        move = "#{@x + (index + 1)}#{@y - (index + 1)}" # Down right
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
-        move = "#{@x - (index + 1)}#{@y + (index + 1)}" # Up left
-        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
+        add_straight_line_moves(index)
+        add_diagonal_moves(index)
       end
+    
     when "King"
-      move = "#{@x + 1}#{@y}" # Right
-      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                            friendly_piece?(move)
-      move = "#{@x}#{@y + 1}" # Up
-      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                            friendly_piece?(move)
-      move = "#{@x - 1}#{@y}" # Left
-      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                            friendly_piece?(move)
-      move = "#{@x}#{@y - 1}" # Down
-      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                            friendly_piece?(move)
-      move = "#{@x + 1}#{@y + 1}" # Up right
-      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                            friendly_piece?(move)
-      move = "#{@x - 1}#{@y - 1}" # Down left
-      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                            friendly_piece?(move)
-      move = "#{@x + 1}#{@y - 1}" # Down right
-      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                            friendly_piece?(move)
-      move = "#{@x - 1}#{@y + 1}" # Up left
-      @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                            friendly_piece?(move) 
+      add_straight_line_moves(0)
+      add_diagonal_moves(0)
     else
 
     end
