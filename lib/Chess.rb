@@ -96,8 +96,6 @@ class Chess
   end
 
   def select_piece(input)
-    #everytime a piece is selected a list of possible destinations for that piece is created
-    #method that creates the list is named the same in every piece class so call reusable
     loop do
       if @board[input] == nil
         puts "That slot is empty" 
@@ -116,7 +114,7 @@ class Chess
     end
   end
 
-  #Using the class and the current location, calculate the possible movements
+  #Using the class and the current location, create a list of the possible movements
   def calculate_moves(piece, location)
     @x = location[0].to_i
     @y = location[1].to_i
@@ -125,8 +123,9 @@ class Chess
     case piece
 
     when "WhitePawn"
+      #move = "#{@x + 1}#{@y + 1}" <--- brah
       # 1 step forward
-      @possible_moves << "#{@x}#{@y + 1}" unless path_blocked?("#{@x}#{@y + 1}") 
+      @possible_moves << "#{@x}#{@y + 1}" unless @board["#{@x}#{@y + 1}"] != nil 
       
       # Attack forward right
       if @board["#{@x + 1}#{@y + 1}"] != nil && 
@@ -143,11 +142,12 @@ class Chess
       end
       
       # 2 steps forward if its in the starting point
-      @possible_moves << "#{@x}#{@y + 2}" unless @y != 2 || path_blocked?("#{@x}#{@y + 2}")
+      @possible_moves << "#{@x}#{@y + 2}" unless @y != 2 || path_blocked?("#{@x}#{@y + 2}") ||
+                                                            @board["#{@x}#{@y + 2}"] != nil
 
     when "BlackPawn"
       # Same moves of the WhitePawn but reversed
-      @possible_moves << "#{@x}#{@y - 1}" unless path_blocked?("#{@x}#{@y - 1}")
+      @possible_moves << "#{@x}#{@y - 1}" unless @board["#{@x}#{@y - 1}"] != nil 
 
       if @board["#{@x + 1}#{@y - 1}"] != nil && 
       	 @board["#{@x + 1}#{@y - 1}"].team == @current_opponent
@@ -161,21 +161,45 @@ class Chess
         @possible_moves << "#{@x - 1}#{@y - 1}" 
       end
 
-      @possible_moves << "#{@x}#{@y - 2}" unless @y != 7 || path_blocked?("#{@x}#{@y - 2}")
+      @possible_moves << "#{@x}#{@y - 2}" unless @y != 7 || path_blocked?("#{@x}#{@y - 2}") ||
+                                                            @board["#{@x}#{@y - 2}"]
 
     when "Rook"
-      
+      7.times do |index|
+      	move = "#{@x + (index + 1)}#{@y}"
+        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) || friendly_piece?(move)
+        move = "#{@x}#{@y + (index + 1)}"
+        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) || friendly_piece?(move)
+      end
+      7.times do |index|
+      	move = "#{@x - (index + 1)}#{@y}"
+        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) || friendly_piece?(move)
+        move = "#{@x}#{@y - (index + 1)}"
+        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) || friendly_piece?(move)
+      end     
     when "Knight"
-      knight_movement = [[@x + 1, @y + 2], [@x + 2, @y + 1], 
-                         [@x + 2, @y - 1], [@x + 1, @y - 2], 
-                         [@x - 1, @y - 2], [@x - 2, @y - 1], 
-                         [@x - 2, @y + 1], [@x - 1, @y + 2]]
+      knight_moves = [[@x + 1, @y + 2], [@x + 2, @y + 1], 
+                      [@x + 2, @y - 1], [@x + 1, @y - 2], 
+                      [@x - 1, @y - 2], [@x - 2, @y - 1], 
+                      [@x - 2, @y + 1], [@x - 1, @y + 2]]
       
-      knight_movement.each do |move| 
+      knight_moves.each do |move| 
         @possible_moves << "#{move[0]}#{move[1]}" unless out_of_bounds?("#{move[0]}#{move[1]}") ||
                                                         friendly_piece?("#{move[0]}#{move[1]}")
       end        
     when "Bishop"
+      7.times do |index|
+      	move = "#{@x + (index + 1)}#{@y + (index + 1)}"
+        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) || friendly_piece?(move)
+        move = "#{@x - (index + 1)}#{@y - (index + 1)}"
+        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) || friendly_piece?(move)
+      end
+      7.times do |index|
+      	move = "#{@x + (index + 1)}#{@y - (index + 1)}"
+        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) || friendly_piece?(move)
+        move = "#{@x - (index + 1)}#{@y + (index + 1)}"
+        @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) || friendly_piece?(move)
+      end   
 
     when "Queen"
 
@@ -200,14 +224,41 @@ class Chess
 
     x_steps = target[0].to_i - @x
     y_steps = target[1].to_i - @y
-
-    y_steps.abs.times do |index| #maybe will need (y_steps.abs - 1) to check the path up to the target but not included
-      if y_steps > 0
-        current_target = @y + (index + 1)
-        return true if @board["#{target[0]}#{current_target}"] != nil
-      else
-        current_target = @y - (index + 1)
-        return true if @board["#{target[0]}#{current_target}"] != nil
+    if @board[@current_selection].class.to_s.include?("Pawn") || @board[@current_selection].class.to_s.include?("Rook")
+      (y_steps.abs - 1).times do |index| #maybe will need (y_steps.abs - 1) to check the path up to the target but not included
+        if y_steps > 0
+          current_target = @y + (index + 1)
+          return true if @board["#{target[0]}#{current_target}"] != nil
+        elsif y_steps < 0
+          current_target = @y - (index + 1)
+          return true if @board["#{target[0]}#{current_target}"] != nil
+        end
+      end
+      (x_steps.abs - 1).times do |index| #maybe will need (y_steps.abs - 1) to check the path up to the target but not included
+        if x_steps > 0
+          current_target = @x + (index + 1)
+          return true if @board["#{current_target}#{target[1]}"] != nil
+        elsif x_steps < 0
+          current_target = @x - (index + 1)
+          return true if @board["#{current_target}#{target[1]}"] != nil
+        end
+      end
+    else
+      #bishop rules
+      (y_steps.abs - 1).times do |index| #maybe will need (y_steps.abs - 1) to check the path up to the target but not included
+        if y_steps > 0 && x_steps > 0
+          current_target = "#{@x + (index + 1)}#{@y + (index + 1)}"
+          return true if @board[current_target] != nil
+        elsif y_steps < 0 && x_steps > 0
+          current_target = "#{@x + (index + 1)}#{@y - (index + 1)}"
+          return true if @board[current_target] != nil
+        elsif y_steps > 0 && x_steps < 0
+          current_target = "#{@x - (index + 1)}#{@y + (index + 1)}"
+          return true if @board[current_target] != nil
+        elsif y_steps < 0 && x_steps < 0
+          current_target = "#{@x - (index + 1)}#{@y - (index + 1)}"
+          return true if @board["#{target[0]}#{current_target}"] != nil
+        end
       end
     end
     false
@@ -311,5 +362,5 @@ class Chess
 
 end
 
-#muh_chess = Chess.new
-#muh_chess.start_game
+muh_chess = Chess.new
+muh_chess.start_game
