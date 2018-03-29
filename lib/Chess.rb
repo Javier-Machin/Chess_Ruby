@@ -25,30 +25,66 @@ class Chess
   def start_game   
     print_board
  
-    loop do
-      	
-      puts ""
-      puts "It's #{@current_player}'s turn"
+    loop do      	
+      puts "\nIt's #{@current_player}'s turn\n\n"
       puts "Select a piece"
       input = gets.chomp
       save_state if input == "save"
-      input = convert_input(input)
+      break if input == "exit"
+      input = check_input(input, "selection")
       select_piece(input)
       puts "Select destination"
       input = gets.chomp
       save_state if input == "save"
-      input = convert_input(input)
-      destination = move_to(input)
+      break if input == "exit"
+      input = check_input(input)
+      move_to(input)
       #king_alive?
-      puts "    Check!" if is_check?
-      #is_checkmate?
+      if is_check?(@current_king_location)
+        puts "   CHECK!"
+        puts "   CHECKMATE!" if is_checkmate?
+      end
       next_turn
       print_board 
     end
 
   end
 
-  def is_check?
+  def check_input(input, type="")
+    input = convert_input(input) unless input == "save"
+    if type == "selection"
+      loop do
+        if input == "save"
+          puts "Game saved"
+        elsif @board[input] == nil
+          puts "That slot is empty" 
+        elsif @board[input].team == @current_player
+          return input 
+        else
+          puts "Invalid selection, wrong team"
+        end
+        puts "select a piece"
+        input = gets.chomp[0, 2]
+        input = convert_input(input)
+      end
+    else
+      loop do 
+        if @possible_moves.include?(input)
+          return input
+        elsif @board[input] != nil && @board[input].team == @current_player
+          select_piece(input)
+        else
+          puts "Invalid move, enter a different target location"
+        end
+        puts "Select a destination" 
+        input = gets.chomp[0, 2]
+        input = convert_input(input)
+      end  
+    end
+  end
+
+
+  def is_check?(king_location)
   	@board.each do |key, value|
   	  if value != nil && value.team == @current_player
   	    piece = value.class.to_s.split("::")[-1]
@@ -57,6 +93,14 @@ class Chess
   	  end
   	end
     false
+  end
+
+  def is_checkmate?
+    calculate_moves("King", @current_king_location)
+    king_moves = @possible_moves.clone
+    king_moves.all? do | move |
+      is_check?(move)
+    end
   end
 
   #Populates the board with pieces and empty slots
@@ -89,7 +133,8 @@ class Chess
 
   def print_board
     @board.each do |key, value|
-      @current_king_location = key if value.class.to_s.include?("King") && value.team == @current_opponent
+      @current_king_location = key if value.class.to_s.include?("King") && 
+                                      value.team == @current_opponent
       if key[0] == "8"
         value == nil ? (puts "[  ]") : (puts "[#{value.symbol} ]")
       elsif key[0] == "1"
@@ -100,10 +145,6 @@ class Chess
       end
     end
     puts "   a   b   c   d   e   f   g   h"
-  end
-
-  def check_input(input, type)
-
   end
 
   def next_turn
@@ -117,22 +158,10 @@ class Chess
   end
 
   def select_piece(input)
-    loop do
-      if @board[input] == nil
-        puts "That slot is empty" 
-      elsif @board[input].team == @current_player
-        piece = @board[input].class.to_s.split("::")[-1]
-        puts "#{piece} selected"
-        @current_selection = input
-        calculate_moves(piece, input)
-        break
-      else
-        puts "Invalid selection, wrong team"
-      end
-      puts "select a piece"
-      input = gets.chomp[0, 2]
-      input = convert_input(input)
-    end
+    piece = @board[input].class.to_s.split("::")[-1]
+    puts "#{piece} selected"
+    @current_selection = input
+    calculate_moves(piece, input)
   end
 
   # Using the class and the current location, 
@@ -309,19 +338,9 @@ class Chess
   end
 
   def move_to(destination)
-    #gucci if destination included in the list of possible destinations
-    #or change selection if destination friendly piece
-    loop do 
-      if @possible_moves.include?(destination)
-        @board[destination] = @board[@current_selection]
-        @board[@current_selection] = nil
-        return destination
-      else
-        puts "Invalid move, enter a different target location"
-      end
-      destination = gets.chomp[0, 2]
-      destination = convert_input(destination)
-    end
+    @board[destination] = @board[@current_selection]
+    @board[@current_selection] = nil
+    return destination
   end
 
   def save_state
@@ -354,6 +373,7 @@ class Chess
     puts "(2) Load game"
     print "Select an option: "
     option = gets.chomp[0]
+    puts ""
     puts load_state if option == "2"
     start_game
   end
