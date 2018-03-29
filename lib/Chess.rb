@@ -1,3 +1,4 @@
+require "json"
 class Chess
   attr_accessor :board
   
@@ -5,6 +6,7 @@ class Chess
     @player1 = "Whites"
     @player2 = "Blacks"
     @board = {}
+    create_board
     @current_player = @player1
     @current_opponent = @player2
     @current_selection = nil
@@ -19,18 +21,20 @@ class Chess
     return "#{x}#{y}"
   end
 
-  def start_game
-    create_board
+  def start_game   
     print_board
-    
+ 
     loop do
+      puts ""
       puts "It's #{@current_player}'s turn"
       puts "Select a piece"
       input = gets.chomp
+      save_state if input == "save"
       input = convert_input(input)
       select_piece(input)
       puts "Select destination"
       input = gets.chomp
+      save_state if input == "save"
       input = convert_input(input)
       move_to(input)
       #king_alive?
@@ -137,7 +141,6 @@ class Chess
       move = "#{@x}#{@y - (index + 1)}" # Down
       @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
                                                             friendly_piece?(move)
-
     end
 
     def add_diagonal_moves(index)
@@ -152,7 +155,7 @@ class Chess
                                                             friendly_piece?(move)
       move = "#{@x - (index + 1)}#{@y + (index + 1)}" # Up left
       @possible_moves << move unless path_blocked?(move) || out_of_bounds?(move) ||
-                                                              friendly_piece?(move)
+                                                            friendly_piece?(move)
     end
 
     case piece
@@ -198,6 +201,8 @@ class Chess
       @possible_moves << move unless @y != 7 || path_blocked?(move) || @board[move]
 
     when "Rook"
+      # 7 is the max distance between squares
+      # The method is called 7 times to have a list of all possible targets ready
       7.times { |index| add_straight_line_moves(index) }
 
     when "Knight"
@@ -221,6 +226,7 @@ class Chess
       end
     
     when "King"
+      # The King only can move 1 square away so the methods are called just once
       add_straight_line_moves(0)
       add_diagonal_moves(0)
     else
@@ -305,22 +311,49 @@ class Chess
   end
 
   def save_state
-    #check hangman
+  	json_board = {}
+  	@board.each do |key, value|
+  	  value != nil ? json_board[key] = value.as_json : json_board[key] = nil
+  	end 
+    json_object = { :json_board => json_board, :current_player => @current_player }.to_json
+    File.open("saved_state.json", "w") { |file| file.write(json_object) }
   end
 
+  # Sets current_player and reconstruct the board with the saved state values
   def load_state
-    #check hangman
+    begin
+      save_file = File.read("saved_state.json")
+    rescue
+      return "No saved game found"
+    end
+    json_hash = JSON.parse(save_file)
+    json_hash["json_board"].each do |key, value|
+      value == nil ? @board[key] = nil : @board[key] = Object.const_get(value["class"]).new
+    end
+    @current_player = json_hash["current_player"]
+    return "Game loaded"
   end
 
   def main_menu
-    #1 start new game
-    #2 load game
+    puts "(1) New game"
+    puts "(2) Load game"
+    print "Select an option: "
+    option = gets.chomp[0]
+    puts load_state if option == "2"
+    start_game
   end
 
   class Piece
     attr_accessor :team, :symbol 
     def initialize(team)
       @team = team
+    end
+
+    def as_json
+      { 
+      	:team => @team,
+      	:class => self.class.to_s.split("::")[-1]
+      }
     end
   end
 
@@ -380,5 +413,5 @@ class Chess
 
 end
 
-#muh_chess = Chess.new
-#muh_chess.start_game
+muh_chess = Chess.new
+muh_chess.main_menu
