@@ -10,6 +10,7 @@ class Chess
     @current_player = @player1
     @current_opponent = @player2
     @current_selection = nil
+    @current_king_location = nil
     @possible_moves = []
     @x = 1
     @y = 1
@@ -25,6 +26,7 @@ class Chess
     print_board
  
     loop do
+      	
       puts ""
       puts "It's #{@current_player}'s turn"
       puts "Select a piece"
@@ -36,14 +38,25 @@ class Chess
       input = gets.chomp
       save_state if input == "save"
       input = convert_input(input)
-      move_to(input)
+      destination = move_to(input)
       #king_alive?
-      #is_check?
+      puts "    Check!" if is_check?
       #is_checkmate?
-      print_board
       next_turn
+      print_board 
     end
 
+  end
+
+  def is_check?
+  	@board.each do |key, value|
+  	  if value != nil && value.team == @current_player
+  	    piece = value.class.to_s.split("::")[-1]
+  	    calculate_moves(piece, key)
+  	    return true if @possible_moves.any? { |move| move == @current_king_location }
+  	  end
+  	end
+    false
   end
 
   #Populates the board with pieces and empty slots
@@ -76,6 +89,7 @@ class Chess
 
   def print_board
     @board.each do |key, value|
+      @current_king_location = key if value.class.to_s.include?("King") && value.team == @current_opponent
       if key[0] == "8"
         value == nil ? (puts "[  ]") : (puts "[#{value.symbol} ]")
       elsif key[0] == "1"
@@ -301,7 +315,7 @@ class Chess
       if @possible_moves.include?(destination)
         @board[destination] = @board[@current_selection]
         @board[@current_selection] = nil
-        break
+        return destination
       else
         puts "Invalid move, enter a different target location"
       end
