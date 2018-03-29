@@ -328,7 +328,8 @@ class Chess
     end
     json_hash = JSON.parse(save_file)
     json_hash["json_board"].each do |key, value|
-      value == nil ? @board[key] = nil : @board[key] = Object.const_get(value["class"]).new
+      value == nil ? @board[key] = nil : 
+                     @board[key] = Chess.const_get(value["class"]).new(value["team"])
     end
     @current_player = json_hash["current_player"]
     return "Game loaded"
