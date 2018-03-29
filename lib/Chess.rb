@@ -25,7 +25,10 @@ class Chess
   def start_game   
     print_board
  
-    loop do      	
+    loop do
+      if is_check?(@current_king_location)      
+        puts "YOU ARE IN CHECK!" 
+      end      	
       puts "\nIt's #{@current_player}'s turn\n\n"
       puts "Select a piece"
       input = gets.chomp
@@ -39,11 +42,6 @@ class Chess
       break if input == "exit"
       input = check_input(input)
       move_to(input)
-      #king_alive?
-      if is_check?(@current_king_location)
-        puts "   CHECK!"
-        puts "   CHECKMATE!" if is_checkmate?
-      end
       next_turn
       print_board 
     end
@@ -86,9 +84,11 @@ class Chess
 
   def is_check?(king_location)
   	@board.each do |key, value|
-  	  if value != nil && value.team == @current_player
+  	  if value != nil && value.team == @current_opponent
   	    piece = value.class.to_s.split("::")[-1]
+  	    next_turn
   	    calculate_moves(piece, key)
+  	    next_turn
   	    return true if @possible_moves.any? { |move| move == @current_king_location }
   	  end
   	end
@@ -96,11 +96,8 @@ class Chess
   end
 
   def is_checkmate?
-    calculate_moves("King", @current_king_location)
-    king_moves = @possible_moves.clone
-    king_moves.all? do | move |
-      is_check?(move)
-    end
+    #do every possible movement for all enemy(?) pieces and look for check after each movement,
+    #if any of those takes us out of check we gucci mah dude  
   end
 
   #Populates the board with pieces and empty slots
@@ -134,7 +131,7 @@ class Chess
   def print_board
     @board.each do |key, value|
       @current_king_location = key if value.class.to_s.include?("King") && 
-                                      value.team == @current_opponent
+                                      value.team == @current_player
       if key[0] == "8"
         value == nil ? (puts "[  ]") : (puts "[#{value.symbol} ]")
       elsif key[0] == "1"
@@ -206,20 +203,17 @@ class Chess
     when "WhitePawn"
       # 1 step forward
       move = "#{@x}#{@y + 1}"
-      @possible_moves << move unless @board[move] != nil 
-      
+      @possible_moves << move unless @board[move] != nil      
       # Attack forward right
       move = "#{@x + 1}#{@y + 1}"
       if @board[move] != nil && @board[move].team == @current_opponent 
         @possible_moves << move 
-      end
-      
+      end     
       # Attack forward left
       move = "#{@x - 1}#{@y + 1}"
       if @board[move] != nil && @board[move].team == @current_opponent 
         @possible_moves << move 
-      end
-      
+      end    
       # 2 steps forward if its in the starting point
       move = "#{@x}#{@y + 2}"
       @possible_moves << move unless @y != 2 || path_blocked?(move) ||
@@ -229,7 +223,7 @@ class Chess
       # Same moves of the WhitePawn but reversed
       move = "#{@x}#{@y - 1}"
       @possible_moves << move unless @board[move] != nil 
-      
+     
       move = "#{@x + 1}#{@y - 1}"
       if @board[move] != nil && @board[move].team == @current_opponent
         @possible_moves << move 
@@ -269,7 +263,7 @@ class Chess
       end
     
     when "King"
-      # The King only can move 1 square away so the methods are called just once
+      # The King can move only 1 square away so the methods are called just once
       add_straight_line_moves(0)
       add_diagonal_moves(0)
     else
@@ -344,10 +338,10 @@ class Chess
   end
 
   def save_state
-  	json_board = {}
-  	@board.each do |key, value|
-  	  value != nil ? json_board[key] = value.as_json : json_board[key] = nil
-  	end 
+    json_board = {}
+    @board.each do |key, value|
+      value != nil ? json_board[key] = value.as_json : json_board[key] = nil
+    end 
     json_object = { :json_board => json_board, :current_player => @current_player }.to_json
     File.open("saved_state.json", "w") { |file| file.write(json_object) }
   end
