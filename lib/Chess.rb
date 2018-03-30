@@ -27,7 +27,8 @@ class Chess
  
     loop do
       if is_check?(@current_king_location)      
-        puts "YOU ARE IN CHECK!" 
+        puts "YOU ARE IN CHECK!"
+        break if is_checkmate? 
       end      	
       puts "\nIt's #{@current_player}'s turn\n\n"
       puts "Select a piece"
@@ -46,6 +47,68 @@ class Chess
       print_board 
     end
 
+  end
+
+  def is_check?(king_location)
+  	@board.each do |key, value|
+  	  if value != nil && value.team == @current_opponent
+  	    piece = value.class.to_s.split("::")[-1]
+  	    next_turn
+  	    calculate_moves(piece, key)
+  	    next_turn
+  	    return true if @possible_moves.any? { |move| move == king_location}
+  	  end
+  	end
+    false
+  end
+
+ # Do every possible movement for the king, and confirms it is in check in every position.
+ # In case of the the king being in check in every position, 
+ # checks every ally piece possible moves and looks for one where the king isn't in check,
+ # returns false if it finds one, otherwise its checkmate
+  def is_checkmate?
+    @current_selection = @current_king_location
+    calculate_moves("King", @current_king_location)
+    puts @possible_moves
+    move_out_of_check = @possible_moves.all? do |move|
+    	                  board_pre_move = @board.clone
+    	                  @board[move] = @board[@current_king_location]
+    	                  @board[@current_king_location] = nil
+                          if is_check?(move)
+                          	@board = board_pre_move
+                          	true
+                          else
+                          	@board = board_pre_move 
+                          	false
+                          end
+                        end
+    puts move_out_of_check
+    if move_out_of_check
+      board_pre_move = @board.clone	
+      board_pre_move.each do |key, value|
+        if value != nil && value.team == @current_player && !value.class.to_s.include?("King")
+          piece = value.class.to_s.split("::")[-1]
+          @current_selection = key 
+          calculate_moves(piece, key)
+          @possible_moves.each do |move|  
+            @board[move] = @board[@current_selection]
+            @board[@current_selection] = nil 
+            unless is_check?(@current_king_location)
+              puts "  not checkmate!"
+              #Always revert the changes
+              @board[move] = board_pre_move[move]
+              @board[@current_selection] = board_pre_move[@current_selection]
+              return false
+            else
+              @board[move] = board_pre_move[move]
+              @board[@current_selection] = board_pre_move[@current_selection]	
+            end
+          end
+        end
+      end
+      puts " looks like checkmate o.O"
+      true
+    end
   end
 
   def check_input(input, type="")
@@ -79,25 +142,6 @@ class Chess
         input = convert_input(input)
       end  
     end
-  end
-
-
-  def is_check?(king_location)
-  	@board.each do |key, value|
-  	  if value != nil && value.team == @current_opponent
-  	    piece = value.class.to_s.split("::")[-1]
-  	    next_turn
-  	    calculate_moves(piece, key)
-  	    next_turn
-  	    return true if @possible_moves.any? { |move| move == @current_king_location }
-  	  end
-  	end
-    false
-  end
-
-  def is_checkmate?
-    #do every possible movement for all enemy(?) pieces and look for check after each movement,
-    #if any of those takes us out of check we gucci mah dude  
   end
 
   #Populates the board with pieces and empty slots
