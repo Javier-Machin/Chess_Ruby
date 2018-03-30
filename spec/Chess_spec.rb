@@ -46,4 +46,35 @@ describe Chess do
       
     end
   end
+
+  describe "is_check?" do 
+
+    context "When a king is in check" do
+
+      it "returns true" do
+        my_game.select_piece("41")
+        my_game.move_to("48")
+        my_game.next_turn
+        expect(my_game.is_check?("58")).to eql(true)
+      end
+    end
+  end
+
+  describe "is_checkmate?" do 
+
+    context "When a king is in checkmate" do
+
+      it "returns true" do 
+        my_game.select_piece("41")
+        my_game.move_to("48")
+        my_game.select_piece("48")
+        my_game.move_to("38")
+        my_game.next_turn
+        my_game.current_king_location = "58"
+        my_game.is_check?("58")
+        expect(my_game.is_checkmate?).to eql(true)
+      end
+    end
+  end
+
 end

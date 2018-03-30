@@ -1,6 +1,7 @@
 require "json"
+
 class Chess
-  attr_accessor :board
+  attr_accessor :board, :current_king_location
   
   def initialize
     @player1 = "Whites"
@@ -17,12 +18,17 @@ class Chess
   end
 
   def convert_input(input)
+  	return "exit" if input == "exit"
     x = input[0].ord - 96
     y = input[1]
     return "#{x}#{y}"
   end
 
-  def start_game   
+  def start_game
+    puts "To select a piece or a destination write the coordinates ex:\n" + 
+         "b1 to select the left white knight.\n\nYou can enter 'save' to save" + 
+         " the current state of the match\nor 'exit' to leave the game.\n\n"
+
     print_board
  
     loop do
@@ -33,15 +39,15 @@ class Chess
       puts "\nIt's #{@current_player}'s turn\n\n"
       puts "Select a piece"
       input = gets.chomp
-      save_state if input == "save"
-      break if input == "exit"
+      save_state if input == "save"  
       input = check_input(input, "selection")
+      break if input == "exit" 
       select_piece(input)
       puts "Select destination"
       input = gets.chomp
-      save_state if input == "save"
-      break if input == "exit"
+      save_state if input == "save"      
       input = check_input(input)
+      break if input == "exit"
       move_to(input)
       next_turn
       print_board 
@@ -62,14 +68,10 @@ class Chess
     false
   end
 
- # Do every possible movement for the king, and confirms it is in check in every position.
- # In case of the the king being in check in every position, 
- # checks every ally piece possible moves and looks for one where the king isn't in check,
- # returns false if it finds one, otherwise its checkmate
+# Do every possible movement for the king, and confirms it is in check in every position.
   def is_checkmate?
     @current_selection = @current_king_location
     calculate_moves("King", @current_king_location)
-    puts @possible_moves
     move_out_of_check = @possible_moves.all? do |move|
     	                  board_pre_move = @board.clone
     	                  @board[move] = @board[@current_king_location]
@@ -82,8 +84,11 @@ class Chess
                           	false
                           end
                         end
-    puts move_out_of_check
+  # In case of the the king being in check in every position, 
+  # checks every ally piece possible moves and looks for one where the king isn't in check,
+  # returns false if it finds one, otherwise its checkmate
     if move_out_of_check
+      #Clone the board original state to use it to undo changes
       board_pre_move = @board.clone	
       board_pre_move.each do |key, value|
         if value != nil && value.team == @current_player && !value.class.to_s.include?("King")
@@ -95,7 +100,7 @@ class Chess
             @board[@current_selection] = nil 
             unless is_check?(@current_king_location)
               puts "  not checkmate!"
-              #Always revert the changes
+              #Always undo the changes
               @board[move] = board_pre_move[move]
               @board[@current_selection] = board_pre_move[@current_selection]
               return false
@@ -106,7 +111,7 @@ class Chess
           end
         end
       end
-      puts " looks like checkmate o.O"
+      puts "  CHECKMATE! #{@current_opponent} Won!"
       true
     end
   end
@@ -115,7 +120,9 @@ class Chess
     input = convert_input(input) unless input == "save"
     if type == "selection"
       loop do
-        if input == "save"
+      	if input == "exit"
+          return "exit"
+        elsif input == "save"
           puts "Game saved"
         elsif @board[input] == nil
           puts "That slot is empty" 
@@ -124,13 +131,17 @@ class Chess
         else
           puts "Invalid selection, wrong team"
         end
-        puts "select a piece"
-        input = gets.chomp[0, 2]
+        puts "Select a piece"
+        input = gets.chomp
         input = convert_input(input)
       end
     else
       loop do 
-        if @possible_moves.include?(input)
+      	if input == "exit"
+      	  return "exit"
+      	elsif input == "save"
+          puts "Game saved"  
+        elsif @possible_moves.include?(input)
           return input
         elsif @board[input] != nil && @board[input].team == @current_player
           select_piece(input)
@@ -138,7 +149,7 @@ class Chess
           puts "Invalid move, enter a different target location"
         end
         puts "Select a destination" 
-        input = gets.chomp[0, 2]
+        input = gets.chomp
         input = convert_input(input)
       end  
     end
@@ -486,5 +497,5 @@ class Chess
 
 end
 
-muh_chess = Chess.new
-muh_chess.main_menu
+#muh_chess = Chess.new
+#muh_chess.main_menu
