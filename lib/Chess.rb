@@ -32,9 +32,13 @@ class Chess
     print_board
  
     loop do
-      if is_check?(@current_king_location)      
-        puts "YOU ARE IN CHECK!"
-        break if is_checkmate? 
+      if is_check?(@current_king_location)              
+        if is_checkmate?
+          puts "  CHECKMATE! #{@current_opponent} Won!"
+          break
+        else
+          puts "YOU ARE IN CHECK!"
+        end
       end      	
       puts "\nIt's #{@current_player}'s turn\n\n"
       puts "Select a piece"
@@ -85,7 +89,7 @@ class Chess
                           end
                         end
   # In case of the the king being in check in every position, 
-  # checks every ally piece possible moves and looks for one where the king isn't in check,
+  # checks every ally piece possible movements and looks for one where the king isn't in check,
   # returns false if it finds one, otherwise its checkmate
     if move_out_of_check
       #Clone the board original state to use it to undo changes
@@ -111,11 +115,11 @@ class Chess
           end
         end
       end
-      puts "  CHECKMATE! #{@current_opponent} Won!"
       true
     end
   end
 
+# Check the input differently when selecting a piece or a target location
   def check_input(input, type="")
     input = convert_input(input) unless input == "save"
     if type == "selection"
@@ -432,7 +436,7 @@ class Chess
     def initialize(team)
       @team = team
     end
-
+    # Creates a json-friendly hash
     def as_json
       { 
       	:team => @team,
@@ -440,7 +444,7 @@ class Chess
       }
     end
   end
-
+  # Every class inherits from Piece and gets its Chess piece symbol
   class WhitePawn < Piece
     def initialize(team)
       super	
@@ -497,5 +501,5 @@ class Chess
 
 end
 
-#muh_chess = Chess.new
-#muh_chess.main_menu
+my_chess = Chess.new
+my_chess.main_menu
