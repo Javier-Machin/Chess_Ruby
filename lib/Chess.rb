@@ -18,7 +18,7 @@ class Chess
   end
 
   def convert_input(input)
-  	return "exit" if input == "exit"
+    return "exit" if input == "exit"
     x = input[0].ord - 96
     y = input[1]
     return "#{x}#{y}"
