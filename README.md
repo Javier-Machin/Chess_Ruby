@@ -30,6 +30,6 @@ Para ejecutar los tests comente o borre las dos últimas líneas en `Chess.rb` y
 
 O juegue online [aquí](https://repl.it/repls/FirmExperiencedConversion) 
 
-(El tablero no está muy bien alineado en Repl.it y la funcionalidad de guardar y cargar no funciona ya que require escribir en archivos)
+(El tablero no está muy bien alineado en Repl.it y la funcionalidad de guardar y cargar no funciona ya que require escribir en archivos.)
 
 El juego incluye guardar y cargar estado usando serialización con JSON.
